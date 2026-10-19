@@ -146,8 +146,8 @@ impl Default for CrosstermEventSource {
 
 impl EventSource for CrosstermEventSource {
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<EventResult>> {
-        // Crossterm's Windows backend expects Win32 input records. If VT input is inherited or
-        // restored by another console client, navigation keys arrive as literal escape bytes.
+        // The Windows backend decodes VT characters inside Win32 input records. Keep VT input
+        // enabled so ConPTY preserves bracketed paste boundaries after a terminal handoff.
         #[cfg(windows)]
         let _ = super::windows_console::ensure_input_record_mode();
 

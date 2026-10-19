@@ -162,8 +162,8 @@ mod tests {
 
     #[test]
     fn windows_console_input_modes_preserve_original_vt_input_state() {
-        let input_record_mode = super::windows_console::input_record_mode(/*mode*/ 0x398);
-        assert_eq!(input_record_mode, 0x198);
+        let input_record_mode = super::windows_console::input_record_mode(/*mode*/ 0x198);
+        assert_eq!(input_record_mode, 0x398);
         assert_eq!(
             super::windows_console::restored_input_mode(
                 input_record_mode,
@@ -173,7 +173,7 @@ mod tests {
         );
         assert_eq!(
             super::windows_console::restored_input_mode(
-                /*mode*/ 0x198,
+                /*mode*/ 0x398,
                 super::windows_console::VirtualTerminalInput::Disabled,
             ),
             0x198

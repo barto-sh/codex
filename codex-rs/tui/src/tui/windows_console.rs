@@ -7,13 +7,15 @@ pub(super) enum VirtualTerminalInput {
 }
 
 pub(super) fn input_record_mode(mode: u32) -> u32 {
-    mode & !ENABLE_VIRTUAL_TERMINAL_INPUT
+    // Preserve terminal-issued paste boundaries for crossterm's VT decoder.
+    // Native mouse, focus and key-up records continue through the Win32 reader.
+    mode | ENABLE_VIRTUAL_TERMINAL_INPUT
 }
 
 pub(super) fn restored_input_mode(mode: u32, original: VirtualTerminalInput) -> u32 {
     match original {
         VirtualTerminalInput::Enabled => mode | ENABLE_VIRTUAL_TERMINAL_INPUT,
-        VirtualTerminalInput::Disabled => input_record_mode(mode),
+        VirtualTerminalInput::Disabled => mode & !ENABLE_VIRTUAL_TERMINAL_INPUT,
     }
 }
 
