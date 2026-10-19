@@ -2,6 +2,8 @@
 
 This harness drives the **native Windows CLI** through the operating system's ConPTY implementation. It measures when a follow-up editing marker is rendered, then independently exports the entire composer with Ctrl+G and compares SHA-256. Completing a pipe write is not counted as completing a paste.
 
+The input-mode change requires the pinned Windows VT decoder in the same build. Apply the integration commit, including its dependency update, as a unit.
+
 Requirements: Windows with ConPTY, Node.js 22 or later, Python 3 on PATH, and two CLI binaries to compare. The dependency `node-pty` may require the Visual C++ build tools if its prebuilt binary is unavailable.
 
 From this directory in PowerShell:
