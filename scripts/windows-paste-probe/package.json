@@ -1,0 +1,9 @@
+{
+  "name": "codex-windows-paste-probe",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "node-pty": "1.1.0",
+    "@xterm/headless": "6.0.0"
+  }
+}
