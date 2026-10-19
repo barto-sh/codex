@@ -42,3 +42,28 @@ The input adapter follows [Windows Terminal 1.24.12741.0](https://github.com/mic
 The baseline matrix is 1,024 / 8,192 / 65,536 characters, single-line and multiline, three repetitions each. The candidate adds 262,144. `--screen-check` tests 65,536 and 262,144 multiline characters three times each with the normal alternate-screen setting. The functional matrix covers Unicode including non-BMP characters, CRLF/LF, tabs and empty lines, fragmented delimiters with a delayed close, insertion in the middle of a draft, unframed input, repeated large pastes, resize, subsequent editing, cancellation and literal command-like lines.
 
 The `.json` results and `capture.txt` are generated locally and ignored by Git. Only use synthetic input with this harness. The editor helper contains no network code. Inspect results before sharing them; do not upload your normal Codex profile or arbitrary diagnostic logs.
+
+## Recorded validation
+
+Source integration: `3c66589bc87b4793333eb7a1b1e28b70792b2aff`; reproduction harness: `233b7f5b427f7b9f383a3819e57eb058025a7278`. [Raw synthetic measurements and test counts](validation-results.json).
+
+The comparison is the installed release `codex-cli 0.163.0` versus this patched main build `codex-cli 0.0.0`, not a same-base full-CLI A/B. Both use identical semantic and transport payloads. The underlying decoder, mode restoration and queue-order behavior also have focused native tests.
+
+| Binary / screen    | Characters / shape    | Median marker latency |           Range | Exact |
+| ------------------ | --------------------- | --------------------: | --------------: | ----: |
+| baseline (inline)  | 65,536 / single line  |              18.647 s | 18.358-19.167 s |   3/3 |
+| baseline (inline)  | 65,536 / multiline    |              18.370 s | 17.649-18.729 s |   3/3 |
+| candidate (inline) | 65,536 / single line  |               0.187 s |   0.185-0.188 s |   3/3 |
+| candidate (inline) | 65,536 / multiline    |               0.186 s |   0.185-0.186 s |   3/3 |
+| candidate (inline) | 262,144 / single line |               0.343 s |   0.341-0.358 s |   3/3 |
+| candidate (inline) | 262,144 / multiline   |               0.339 s |   0.337-0.342 s |   3/3 |
+| default-screen     | 65,536 / multiline    |               0.187 s |   0.186-0.202 s |   3/3 |
+| default-screen     | 262,144 / multiline   |               0.341 s |   0.341-0.353 s |   3/3 |
+
+A baseline `exact=false` is an observed content mismatch, not a successful paste. All final candidate cases require full-text equality. The three first-composer measurements have median 0.145 s and exact text in all three. The functional sequence passed 19 cases.
+
+Measured production build: `cargo +stable build --release -p codex-cli --bin codex --locked --config 'profile.release.package.codex-tui.codegen-units=16' --config 'profile.release.package.codex-cli.codegen-units=16'` using `rustc 1.96.1 (31fca3adb 2026-06-26)`. The 16-unit overrides affect build parallelism; release optimization and thin LTO remain enabled.
+
+The selected TUI groups passed 155 tests with zero failures. Library CI passed Windows 142 unit tests (10 ignored), Ubuntu 154 (7 ignored), 53 doctests on each, formatting and Clippy with `-D warnings`: [CI run](https://github.com/barto-sh/crossterm/actions/runs/39281925280). That CI head differs from the pinned dependency only by its workflow file. A mutation restoring premature Escape expiry failed the real queued-opener regression; restoring the final implementation passed. Native WinAPI checks restored both original VT states and reasserted VT after an external clear without changing other bits.
+
+These are controlled ConPTY observations. Physical clipboard gestures, IME/layout compatibility, image clipboard and legacy-conhost end-to-end behavior were not observed. The tests do not establish results for Claude Code or pi.
